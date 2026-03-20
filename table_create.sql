@@ -53,7 +53,7 @@ CREATE TABLE Admi_Maintenance (
   id_atelier_horticole INTEGER REFERENCES Info_Maintenance(id_atelier_horticole)
 );
 
-CREATE TABLE Espace_vert (
+CREATE TABLE Espace_vert_ID(
   nsq_espace_vert INTEGER PRIMARY KEY,
   nom_ev TEXT,
   adresse_numero INTEGER,
@@ -78,13 +78,10 @@ CREATE TABLE Encyclopedie (
 );
 
 CREATE TABLE Emplacement (
-  idemplacement TEXT NOT NULL,
-  geo_latitude NUMERIC(15, 12) NOT NULL,
-  geo_longitude NUMERIC(15, 12) NOT NULL,
+  idemplacement TEXT PRIMARY KEY,
   arrondissement TEXT,
   complementadresse TEXT,
-  adresse TEXT,
-  PRIMARY KEY (idemplacement, geo_latitude, geo_longitude)
+  adresse TEXT
 );
 
 CREATE TABLE Arbre (
@@ -102,5 +99,6 @@ CREATE TABLE Arbre (
   espece TEXT,
   idemplacement TEXT,
   FOREIGN KEY (genre, espece) REFERENCES Encyclopedie(genre, espece),
-  FOREIGN KEY (idemplacement, geo_latitude, geo_longitude) REFERENCES Emplacement(idemplacement, geo_latitude, geo_longitude)
+  FOREIGN KEY (idemplacement) REFERENCES Emplacement(idemplacement, geo_latitude, geo_longitude),
+  UNIQUE(geo_latitude, geo_longitude)
 );

@@ -1,33 +1,43 @@
+## Arbres
 
-## A revoir
+F = {
 
-Espace verts
+idbase -> typeemplacement, domanialite, idemplacement,
+genre, espece, varieteoucultivar,
+circonferenceencm, hauteurenm,
+stadedeveloppement, remarquable,
+geo_latitude, geo_longitude
+
+idemplacement ->
+arrondissement, complement_adresse, adresse,
+
+genre,espece -> libellefrancais
+}
+
+## Espaces Verts
 
 F={
-nsq_espace_vert -> nom_ev , categorie , adresse_numero, adresse_typevoie adresse_libellevoie, adresse_codepostal,
-geom,geo_x_y,id_eqpt,ida3d_enb
-
-id_eqt->ida3d_enb,site_ville, id_Atelier_horticole
-
-id_Atelier_horticole -> id_division
-
-site_ville -> competence
-
-ida3d_enb -> annee_ouverture, annee_renovation,ancien_nom_ev,annee_changement,nb_entites,ouvert_ferme,url_plan,last_edited_user,last_edited_date
-
-geom -> poly_are,surface_totale_reelle,surface_cloture,perimeter
+nsq_espace_vert -> nom_ev, adresse_numero,
+adresse_typevoie, adresse_codepostal,
+geo_latitude_vert, geo_longitude_vert,
+id_eqpt, id_geom, ida3d_enb, categorie
 
 categorie -> type_ev
 
-}
+ida3d_enb -> annee_ouverture, annee_renovation,
+ancien_nom_ev, annee_changement,
+nb_entites, ouvert_ferme, url_plan,
+last_edited_user, last_edited_date
 
-Arbres Parisiens
+id_eqpt -> site_ville, id_Atelier_horticole
 
-F={
-idbase->typeemplacement,domanialite,idemplacement,genre,espèce,varieoucultivar,circonferenceencm,hauteurenm,stadedeveloppement,remarquable,geo_point_2d
+site_ville -> competence
 
-idemplacement,geo_point_2d ->arrondissement,complement_adresse,adresse
+id_Atelier_horticole -> id_division
 
-genre,espèce -> libellefrancais
+id_geom -> geom_type, poly_area,
+surface_totale_reelle,
+surface_cloture, perimeter
 
+id_geom, ordre -> longitude, latitude
 }
