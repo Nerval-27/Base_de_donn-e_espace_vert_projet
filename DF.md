@@ -18,6 +18,7 @@ genre,espece -> libellefrancais
 
 F={
 nsq_espace_vert -> nom_ev, adresse_numero,
+adresse_complement,
 adresse_typevoie, adresse_codepostal,
 geo_latitude_vert, geo_longitude_vert,
 id_eqpt, id_geom, ida3d_enb, categorie
@@ -36,7 +37,7 @@ site_ville -> competence
 id_Atelier_horticole -> id_division
 
 id_geom -> geom_type, poly_area,
-surface_totale_reelle,
+surface_totale_reelle,surface_horticole,
 surface_cloture, perimeter
 
 id_geom, ordre -> longitude, latitude

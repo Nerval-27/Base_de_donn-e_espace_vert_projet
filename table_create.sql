@@ -22,6 +22,7 @@ CREATE TABLE Geom_mesures (
   id_geom INTEGER PRIMARY KEY REFERENCES Geom_polygone(id_geom),
   poly_area INTEGER,
   surface_totale_reelle INTEGER,
+  surface_horticole INTEGER,
   surface_cloture TEXT,
   perimeter NUMERIC(15, 3)
 );
