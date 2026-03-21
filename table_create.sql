@@ -1,75 +1,6 @@
-CREATE TABLE Categorie (
-  categorie TEXT PRIMARY KEY,
-  type_ev TEXT NOT NULL
-);
+CREATE EXTENSION IF NOT EXISTS postgis;
 
-CREATE TABLE Info_Admi (
-  site_villes TEXT PRIMARY KEY,
-  competence TEXT
-);
-
-CREATE TABLE Info_Maintenance (
-  id_atelier_horticole INTEGER PRIMARY KEY,
-  id_division INTEGER
-);
-
-CREATE TABLE Geom_polygone (
-  id_geom INTEGER PRIMARY KEY,
-  geom_type TEXT NOT NULL CHECK (geom_type IN ('Polygon', 'MultiPolygon'))
-);
-
-CREATE TABLE Geom_mesures (
-  id_geom INTEGER PRIMARY KEY REFERENCES Geom_polygone(id_geom),
-  poly_area INTEGER,
-  surface_totale_reelle INTEGER,
-  surface_horticole INTEGER,
-  surface_cloture TEXT,
-  perimeter NUMERIC(15, 3)
-);
-
-CREATE TABLE Geom_coordonnee (
-  id_geom INTEGER NOT NULL REFERENCES Geom_polygone(id_geom),
-  ordre INTEGER NOT NULL CHECK (ordre >= 0),
-  longitude NUMERIC(15, 12) NOT NULL,
-  latitude NUMERIC(15, 12) NOT NULL,
-  PRIMARY KEY (id_geom, ordre)
-);
-
-CREATE TABLE Historique (
-  ida3d_enb TEXT PRIMARY KEY,
-  annee_ouverture DATE,
-  annee_renovation DATE,
-  ancien_nom_ev TEXT,
-  annee_changement DATE,
-  nb_entites INTEGER,
-  ouvert_ferme TEXT,
-  url_plan TEXT,
-  last_edited_user TEXT,
-  last_edited_date TIMESTAMP
-);
-
-CREATE TABLE Admi_Maintenance (
-  id_eqpt TEXT PRIMARY KEY,
-  site_villes TEXT REFERENCES Info_Admi(site_villes),
-  id_atelier_horticole INTEGER REFERENCES Info_Maintenance(id_atelier_horticole)
-);
-
-CREATE TABLE Espace_vert_ID(
-  nsq_espace_vert INTEGER PRIMARY KEY,
-  nom_ev TEXT,
-  adresse_numero INTEGER,
-  adresse_complement TEXT,
-  adresse_typevoie TEXT,
-  adresse_libellevoie TEXT,
-  adresse_codepostal TEXT,
-  geo_latitude_vert NUMERIC(15, 12),
-  geo_longitude_vert NUMERIC(15, 12),
-  id_eqpt TEXT REFERENCES Admi_Maintenance(id_eqpt),
-  ida3d_enb TEXT REFERENCES Historique(ida3d_enb),
-  id_geom INTEGER REFERENCES Geom_polygone(id_geom),
-  categorie TEXT REFERENCES Categorie(categorie),
-  UNIQUE (geo_latitude_vert, geo_longitude_vert)
-);
+DROP TABLE IF EXISTS Encyclopedie CASCADE;
 
 CREATE TABLE Encyclopedie (
   genre TEXT NOT NULL,
@@ -78,28 +9,86 @@ CREATE TABLE Encyclopedie (
   PRIMARY KEY (genre, espece)
 );
 
+DROP TABLE IF EXISTS Emplacement CASCADE;
+
 CREATE TABLE Emplacement (
-  idemplacement TEXT PRIMARY KEY,
+  idemplacement TEXT NOT NULL,
+  geo_point_2d GEOMETRY(Point, 4326) NOT NULL,
   arrondissement TEXT,
   complementadresse TEXT,
-  adresse TEXT
+  adresse TEXT,
+  PRIMARY KEY (idemplacement, geo_point_2d)
 );
+
+DROP TABLE IF EXISTS Arbre CASCADE;
 
 CREATE TABLE Arbre (
   idbase INTEGER PRIMARY KEY,
   typeemplacement TEXT,
   domanialite TEXT,
   varieteoucultivar TEXT,
-  circonferenceencm INTEGER CHECK (circonferenceencm >= 0),
-  hauteurenm INTEGER CHECK (hauteurenm >= 0),
+  circonferenceencm INTEGER,
+  hauteurenm INTEGER,
   stadedeveloppement TEXT,
-  remarquable TEXT NOT NULL CHECK (remarquable IN ('OUI', 'NON')),
-  geo_latitude NUMERIC(15, 12) NOT NULL,
-  geo_longitude NUMERIC(15, 12) NOT NULL,
+  remarquable TEXT,
+  geo_point_2d GEOMETRY(Point, 4326),
   genre TEXT,
   espece TEXT,
+  FOREIGN KEY (genre, espece) REFERENCES Encyclopedie (genre, espece),
   idemplacement TEXT,
-  FOREIGN KEY (genre, espece) REFERENCES Encyclopedie(genre, espece),
-  FOREIGN KEY (idemplacement) REFERENCES Emplacement(idemplacement, geo_latitude, geo_longitude),
-  UNIQUE(geo_latitude, geo_longitude)
+  FOREIGN KEY (idemplacement, geo_point_2d) REFERENCES Emplacement (idemplacement, geo_point_2d)
+);
+
+DROP TABLE IF EXISTS Historique CASCADE;
+
+CREATE TABLE Historique (
+  ida3d_enb TEXT PRIMARY KEY,
+  annee_ouverture DATE,
+  annee_renovation DATE,
+  ancien_nom_ev TEXT,
+  annee_changement_nom DATE,
+  nb_entites INTEGER,
+  ouvert_ferme TEXT,
+  url_plan TEXT,
+  last_edited_user TEXT,
+  last_edited_date TIMESTAMP
+);
+
+DROP TABLE IF EXISTS Admi CASCADE;
+
+CREATE TABLE Admi (
+  id_eqpt TEXT PRIMARY KEY,
+  id_division INTEGER,
+  competence TEXT
+);
+
+DROP TABLE IF EXISTS Geom_mesures CASCADE;
+
+CREATE TABLE Geom_mesures(
+  geom GEOMETRY PRIMARY KEY,
+  geom_x_y GEOMETRY(Point, 4326),
+  poly_area INTEGER,
+  surface_totale_reelle INTEGER,
+  surface_horticole INTEGER,
+  presence_cloture TEXT,
+  perimeter NUMERIC(15, 3)
+);
+
+DROP TABLE IF EXISTS Espace_vert CASCADE;
+
+CREATE TABLE Espace_vert (
+  nsq_espace_vert INTEGER PRIMARY KEY,
+  nom_ev TEXT,
+  type_ev TEXT,
+  categorie TEXT,
+  adresse_numero INTEGER,
+  adresse_complement TEXT,
+  adresse_typevoie TEXT,
+  adresse_libellevoie TEXT,
+  adresse_codepostal TEXT,
+  site_villes TEXT,
+  id_atelier_horticole INTEGER,
+  ida3d_enb TEXT REFERENCES Historique (ida3d_enb),
+  id_eqpt TEXT REFERENCES Admi (id_eqpt),
+  geom GEOMETRY REFERENCES Geom_mesures (geom)
 );

@@ -1,44 +1,31 @@
-## Arbres
+Arbres F = {
+  idbase -> typeemplacement, domanialite, idemplacement,
+            genre, espece, varieteoucultivar,
+            circonferenceencm, hauteurenm,
+            stadedeveloppement, remarquable,
+            geo_point_2d
 
-F = {
+  idemplacement, geo_point_2d  ->
+            arrondissement, complementadresse, adresse
 
-idbase -> typeemplacement, domanialite, idemplacement,
-genre, espece, varieteoucultivar,
-circonferenceencm, hauteurenm,
-stadedeveloppement, remarquable,
-geo_latitude, geo_longitude
-
-idemplacement ->
-arrondissement, complement_adresse, adresse,
-
-genre,espece -> libellefrancais
+  genre, espece -> libellefrancais
 }
 
-## Espaces Verts
+Espaces Verts F = {
 
-F={
-nsq_espace_vert -> nom_ev, adresse_numero,
-adresse_complement,
-adresse_typevoie, adresse_codepostal,
-geo_latitude_vert, geo_longitude_vert,
-id_eqpt, id_geom, ida3d_enb, categorie
+  nsq_espace_vert -> nom_ev, adresse_numero,
+                     adresse_complement, adresse_typevoie,
+                     adresse_libellevoie, adresse_codepostal,
+                     site_villes, id_atelier_horticole,
+                     id_eqpt, ida3d_enb, categorie, type_ev,
+                     geom,geom_x_y
 
-categorie -> type_ev
 
-ida3d_enb -> annee_ouverture, annee_renovation,
-ancien_nom_ev, annee_changement,
-nb_entites, ouvert_ferme, url_plan,
-last_edited_user, last_edited_date
+  ida3d_enb -> annee_ouverture, annee_renovation,
+               ancien_nom_ev, annee_changement_nom,
+               nb_entites, ouvert_ferme, url_plan,
+               last_edited_user, last_edited_date
 
-id_eqpt -> site_ville, id_Atelier_horticole
-
-site_ville -> competence
-
-id_Atelier_horticole -> id_division
-
-id_geom -> geom_type, poly_area,
-surface_totale_reelle,surface_horticole,
-surface_cloture, perimeter
-
-id_geom, ordre -> longitude, latitude
+  id_eqpt -> id_division, competence
+  geom,geom_x_y -> poly_area,surface_totale_reelle,surface_horticole,presence_cloture,perimeter,nb_entites
 }
