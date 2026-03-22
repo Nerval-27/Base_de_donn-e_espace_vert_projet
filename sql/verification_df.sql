@@ -65,7 +65,8 @@ CREATE TABLE ev_brut (
 -- ARBRES
 -- =======================================================================
 
--- DF1 : idbase -> tous les autres attributs
+\! echo ''
+\! echo '=== DF1 : idbase -> tous les autres attributs ==='
 SELECT "IDBASE",
        COUNT(DISTINCT ROW("TYPE EMPLACEMENT", "DOMANIALITE",
              "IDEMPLACEMENT", "GENRE", "ESPECE", "VARIETE OUCULTIVAR",
@@ -80,7 +81,8 @@ HAVING COUNT(DISTINCT ROW("TYPE EMPLACEMENT", "DOMANIALITE",
              "STADE DE DEVELOPPEMENT", "REMARQUABLE",
              "geo_point_2d")) > 1;
 
--- DF2 : (idemplacement, geo_longitude, geo_latitude) -> arrondissement, complementadresse, adresse
+\! echo ''
+\! echo '=== DF2 : (idemplacement, lon, lat) -> arrondissement, adresse ==='
 SELECT "IDEMPLACEMENT", geo_lon, geo_lat,
        COUNT(DISTINCT "ARRONDISSEMENT") AS nb_arr,
        COUNT(DISTINCT "LIEU / ADRESSE") AS nb_adr
@@ -97,7 +99,8 @@ GROUP BY "IDEMPLACEMENT", geo_lon, geo_lat
 HAVING COUNT(DISTINCT "ARRONDISSEMENT") > 1
     OR COUNT(DISTINCT "LIEU / ADRESSE") > 1;
 
--- DF3 : (genre, espece) -> libellefrancais
+\! echo ''
+\! echo '=== DF3 : (genre, espece) -> libellefrancais ==='
 SELECT "GENRE", "ESPECE",
        ARRAY_AGG(DISTINCT "LIBELLE FRANCAIS") AS libelles,
        COUNT(DISTINCT "LIBELLE FRANCAIS") AS nb
@@ -106,7 +109,8 @@ WHERE "GENRE" <> '' AND "ESPECE" <> '' AND "LIBELLE FRANCAIS" <> ''
 GROUP BY "GENRE", "ESPECE"
 HAVING COUNT(DISTINCT "LIBELLE FRANCAIS") > 1;
 
--- on montre que idemplacement seul ne determine pas arrondissement
+\! echo ''
+\! echo '=== Contre-exemple : idemplacement seul ne determine pas arrondissement ==='
 SELECT "IDEMPLACEMENT",
        ARRAY_AGG(DISTINCT "ARRONDISSEMENT") AS arrondissements,
        COUNT(DISTINCT "ARRONDISSEMENT") AS nb_arr
@@ -121,7 +125,15 @@ LIMIT 10;
 -- ESPACES VERTS
 -- =======================================================================
 
--- DF4 : nsq_espace_vert -> nom_ev, categorie, type_ev, ...
+\! echo ''
+\! echo '=== Lignes sans identifiant dans le CSV ==='
+SELECT COUNT(*) AS nb_lignes_sans_id
+FROM ev_brut
+WHERE "Identifiant espace vert" IS NULL
+   OR "Identifiant espace vert" = '';
+
+\! echo ''
+\! echo '=== DF4 : nsq_espace_vert -> nom_ev, categorie, type_ev, ... ==='
 SELECT "Identifiant espace vert",
        COUNT(DISTINCT "Nom de l'espace vert") AS nb_nom,
        COUNT(DISTINCT "Catégorie") AS nb_cat,
@@ -138,8 +150,8 @@ HAVING COUNT(DISTINCT "Nom de l'espace vert") > 1
     OR COUNT(DISTINCT "Code postal") > 1
     OR COUNT(DISTINCT "IDA3D_ENB") > 1;
 
--- DF5 : ida3d_enb -> annee_ouverture, nb_entites, ouvert_ferme, ...
--- on exclut '0' et 'JDE' qui sont des valeurs sentinelles
+\! echo ''
+\! echo '=== DF5 : ida3d_enb -> annee_ouverture, nb_entites, ouvert_ferme ==='
 SELECT "IDA3D_ENB",
        COUNT(DISTINCT "Année de l'ouverture") AS nb_ouv,
        COUNT(DISTINCT "Nombre d'entités") AS nb_ent,
@@ -151,7 +163,8 @@ HAVING COUNT(DISTINCT "Année de l'ouverture") > 1
     OR COUNT(DISTINCT "Nombre d'entités") > 1
     OR COUNT(DISTINCT "Ouverture 24h_24h") > 1;
 
--- DF6 : id_eqpt -> id_division, competence
+\! echo ''
+\! echo '=== DF6 : id_eqpt -> id_division, competence ==='
 SELECT "ID_EQPT",
        ARRAY_AGG(DISTINCT "ID_DIVISION") AS divisions,
        ARRAY_AGG(DISTINCT "Compétence") AS competences
@@ -161,7 +174,8 @@ GROUP BY "ID_EQPT"
 HAVING COUNT(DISTINCT "ID_DIVISION") > 1
     OR COUNT(DISTINCT "Compétence") > 1;
 
--- on montre que categorie -> type_ev est faux
+\! echo ''
+\! echo '=== Contre-exemple : categorie ne determine pas type_ev ==='
 SELECT "Catégorie",
        ARRAY_AGG(DISTINCT "Typologie d'espace vert") AS types,
        COUNT(DISTINCT "Typologie d'espace vert") AS nb
