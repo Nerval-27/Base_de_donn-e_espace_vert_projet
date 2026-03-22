@@ -61,9 +61,7 @@ CREATE TABLE ev_brut (
 \copy ev_brut FROM '../data/espaces_verts.csv' WITH (FORMAT csv, DELIMITER ';', HEADER true, ENCODING 'UTF8');
 
 
--- =======================================================================
--- ARBRES
--- =======================================================================
+
 
 \! echo ''
 \! echo '=== DF1 : idbase -> tous les autres attributs ==='
@@ -121,9 +119,6 @@ ORDER BY nb_arr DESC
 LIMIT 10;
 
 
--- =======================================================================
--- ESPACES VERTS
--- =======================================================================
 
 \! echo ''
 \! echo '=== Lignes sans identifiant dans le CSV ==='

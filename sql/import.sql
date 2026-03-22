@@ -45,7 +45,7 @@ CREATE TABLE tmp_ev (
     "Ancien nom de l'espace vert"   TEXT,
     "Année de changement de nom"    TEXT,
     "Nombre d'entités"              TEXT,
-    "Ouverture 24h_24h"             TEXT,
+    "Ouverture 24h"             TEXT,
     "ID_DIVISION"                   TEXT,
     "ID_ATELIER_HORTICOLE"          TEXT,
     "IDA3D_ENB"                     TEXT,
