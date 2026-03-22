@@ -57,8 +57,8 @@ CREATE TABLE ev_brut (
     "last_edited_date"              TEXT
 );
 
-\copy arbres_brut FROM 'les-arbres.csv' WITH (FORMAT csv, DELIMITER ';', HEADER true, ENCODING 'UTF8');
-\copy ev_brut FROM 'espaces_verts.csv' WITH (FORMAT csv, DELIMITER ';', HEADER true, ENCODING 'UTF8');
+\copy arbres_brut FROM '../data/les-arbres.csv' WITH (FORMAT csv, DELIMITER ';', HEADER true, ENCODING 'UTF8');
+\copy ev_brut FROM '../data/espaces_verts.csv' WITH (FORMAT csv, DELIMITER ';', HEADER true, ENCODING 'UTF8');
 
 
 -- =======================================================================

@@ -56,6 +56,14 @@ SELECT ev.nsq_espace_vert,
        ev.site_villes,
        ev.id_eqpt,
        adm.competence,
+       json_build_object(
+           'type', gm.geom_type,
+           'coordinates',
+           CASE WHEN gm.geom_type = 'MultiPolygon'
+                THEN json_build_array(json_build_array(coords.ring))
+                ELSE json_build_array(coords.ring)
+           END
+       ) AS geom,
        h.url_plan,
        ev.geo_latitude_ev,
        ev.geo_longitude_ev,
@@ -64,4 +72,10 @@ SELECT ev.nsq_espace_vert,
 FROM Espace_vert ev
 LEFT JOIN Admi adm ON ev.id_eqpt = adm.id_eqpt
 LEFT JOIN Historique h ON ev.ida3d_enb = h.ida3d_enb
-LEFT JOIN Geom_mesures gm ON ev.id_geom = gm.id_geom;
+LEFT JOIN Geom_mesures gm ON ev.id_geom = gm.id_geom
+LEFT JOIN (
+    SELECT id_geom,
+           json_agg(json_build_array(longitude, latitude) ORDER BY ordre) AS ring
+    FROM Geom_coordonnee
+    GROUP BY id_geom
+) coords ON gm.id_geom = coords.id_geom;

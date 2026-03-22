@@ -59,8 +59,8 @@ CREATE TABLE tmp_ev (
     "last_edited_date"              TEXT
 );
 
-\copy tmp_arbres FROM 'les-arbres.csv' WITH (FORMAT csv, DELIMITER ';', HEADER true, ENCODING 'UTF8');
-\copy tmp_ev FROM 'espaces_verts.csv' WITH (FORMAT csv, DELIMITER ';', HEADER true, ENCODING 'UTF8');
+\copy tmp_arbres FROM '../data/les-arbres.csv' WITH (FORMAT csv, DELIMITER ';', HEADER true, ENCODING 'UTF8');
+\copy tmp_ev FROM '../data/espaces_verts.csv' WITH (FORMAT csv, DELIMITER ';', HEADER true, ENCODING 'UTF8');
 
 
 -- =====================
@@ -167,24 +167,51 @@ WHERE "IDA3D_ENB" IS NOT NULL AND "IDA3D_ENB" <> ''
 ORDER BY "IDA3D_ENB"
 ON CONFLICT DO NOTHING;
 
--- Geom_mesures
-INSERT INTO Geom_mesures (geom_type, poly_area, surface_totale_reelle,
-                          surface_horticole, presence_cloture, perimeter)
-SELECT
+-- table temporaire pour associer chaque espace vert a son id_geom
+CREATE TEMP TABLE tmp_geom_map AS
+SELECT "Identifiant espace vert"::INTEGER AS nsq_espace_vert,
        CASE
          WHEN "Geo Shape" LIKE '%MultiPolygon%' THEN 'MultiPolygon'
          WHEN "Geo Shape" LIKE '%Polygon%' THEN 'Polygon'
          ELSE NULL
-       END,
-       NULLIF("Surface calculée", '')::INTEGER,
-       NULLIF("Superficie totale réelle", '')::INTEGER,
-       NULLIF("Surface horticole", '')::INTEGER,
-       NULLIF("Présence cloture", ''),
-       NULLIF("Périmètre", '')::NUMERIC
+       END AS geom_type,
+       NULLIF("Surface calculée", '')::INTEGER AS poly_area,
+       NULLIF("Superficie totale réelle", '')::INTEGER AS surface_totale_reelle,
+       NULLIF("Surface horticole", '')::INTEGER AS surface_horticole,
+       NULLIF("Présence cloture", '') AS presence_cloture,
+       NULLIF("Périmètre", '')::NUMERIC AS perimeter,
+       "Geo Shape" AS geo_shape_raw
 FROM tmp_ev
 WHERE "Identifiant espace vert" IS NOT NULL
-  AND "Identifiant espace vert" <> ''
-ORDER BY "Identifiant espace vert"::INTEGER;
+  AND "Identifiant espace vert" <> '';
+
+ALTER TABLE tmp_geom_map ADD COLUMN id_geom SERIAL;
+
+-- Geom_mesures
+INSERT INTO Geom_mesures (id_geom, geom_type, poly_area, surface_totale_reelle,
+                          surface_horticole, presence_cloture, perimeter)
+SELECT id_geom, geom_type, poly_area, surface_totale_reelle,
+       surface_horticole, presence_cloture, perimeter
+FROM tmp_geom_map;
+
+SELECT setval('geom_mesures_id_geom_seq', (SELECT MAX(id_geom) FROM Geom_mesures));
+
+-- Geom_coordonnee : on parse les coordonnees du GeoJSON
+INSERT INTO Geom_coordonnee (id_geom, ordre, longitude, latitude)
+SELECT m.id_geom,
+       (ROW_NUMBER() OVER (PARTITION BY m.id_geom ORDER BY t.ordinality)) - 1,
+       (t.coord->>0)::NUMERIC,
+       (t.coord->>1)::NUMERIC
+FROM tmp_geom_map m
+CROSS JOIN LATERAL (
+    SELECT CASE
+        WHEN (m.geo_shape_raw::json)->>'type' = 'MultiPolygon'
+        THEN (m.geo_shape_raw::json)->'coordinates'->0->0
+        ELSE (m.geo_shape_raw::json)->'coordinates'->0
+    END AS ring
+) r
+CROSS JOIN LATERAL json_array_elements(r.ring) WITH ORDINALITY AS t(coord, ordinality)
+WHERE m.geo_shape_raw IS NOT NULL AND m.geo_shape_raw <> '';
 
 -- Espace_vert
 INSERT INTO Espace_vert (nsq_espace_vert, nom_ev, type_ev, categorie,
@@ -195,38 +222,31 @@ INSERT INTO Espace_vert (nsq_espace_vert, nom_ev, type_ev, categorie,
                          id_atelier_horticole, id_eqpt, ida3d_enb,
                          id_geom)
 SELECT
-       "Identifiant espace vert"::INTEGER,
-       NULLIF("Nom de l'espace vert", ''),
-       NULLIF("Typologie d'espace vert", ''),
-       NULLIF("Catégorie", ''),
-       NULLIF("Adresse - Numéro", '')::INTEGER,
-       NULLIF("Adresse - Complément", ''),
-       NULLIF("Adresse - type voie", ''),
-       NULLIF("Adresse - Libellé voie", ''),
-       NULLIF("Code postal", ''),
-       CASE WHEN "Geo point" <> '' AND "Geo point" IS NOT NULL
-            THEN SPLIT_PART("Geo point", ', ', 1)::DOUBLE PRECISION
+       e."Identifiant espace vert"::INTEGER,
+       NULLIF(e."Nom de l'espace vert", ''),
+       NULLIF(e."Typologie d'espace vert", ''),
+       NULLIF(e."Catégorie", ''),
+       NULLIF(e."Adresse - Numéro", '')::INTEGER,
+       NULLIF(e."Adresse - Complément", ''),
+       NULLIF(e."Adresse - type voie", ''),
+       NULLIF(e."Adresse - Libellé voie", ''),
+       NULLIF(e."Code postal", ''),
+       CASE WHEN e."Geo point" <> '' AND e."Geo point" IS NOT NULL
+            THEN SPLIT_PART(e."Geo point", ', ', 1)::DOUBLE PRECISION
             ELSE NULL END,
-       CASE WHEN "Geo point" <> '' AND "Geo point" IS NOT NULL
-            THEN SPLIT_PART("Geo point", ', ', 2)::DOUBLE PRECISION
+       CASE WHEN e."Geo point" <> '' AND e."Geo point" IS NOT NULL
+            THEN SPLIT_PART(e."Geo point", ', ', 2)::DOUBLE PRECISION
             ELSE NULL END,
-       NULLIF("SITE_VILLES", ''),
-       NULLIF("ID_ATELIER_HORTICOLE", '')::INTEGER,
-       NULLIF("ID_EQPT", ''),
-       NULLIF("IDA3D_ENB", ''),
-       gm.id_geom
-FROM tmp_ev
-JOIN Geom_mesures gm ON gm.id_geom = (
-    SELECT COUNT(*)
-    FROM tmp_ev t2
-    WHERE t2."Identifiant espace vert" IS NOT NULL
-      AND t2."Identifiant espace vert" <> ''
-      AND t2."Identifiant espace vert"::INTEGER <= tmp_ev."Identifiant espace vert"::INTEGER
-)
-WHERE "Identifiant espace vert" IS NOT NULL
-  AND "Identifiant espace vert" <> ''
+       NULLIF(e."SITE_VILLES", ''),
+       NULLIF(e."ID_ATELIER_HORTICOLE", '')::INTEGER,
+       NULLIF(e."ID_EQPT", ''),
+       NULLIF(e."IDA3D_ENB", ''),
+       m.id_geom
+FROM tmp_ev e
+JOIN tmp_geom_map m ON e."Identifiant espace vert"::INTEGER = m.nsq_espace_vert
 ON CONFLICT DO NOTHING;
 
 -- nettoyage
+DROP TABLE tmp_geom_map;
 DROP TABLE tmp_arbres;
 DROP TABLE tmp_ev;

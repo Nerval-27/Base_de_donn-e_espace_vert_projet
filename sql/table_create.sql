@@ -1,8 +1,6 @@
 -- table_create.sql
 -- Jordan Lengrai, Nerval Gbaguidi
 
-CREATE EXTENSION IF NOT EXISTS postgis;
-
 DROP TABLE IF EXISTS Geom_coordonnee CASCADE;
 DROP TABLE IF EXISTS Geom_mesures CASCADE;
 DROP TABLE IF EXISTS Espace_vert CASCADE;
